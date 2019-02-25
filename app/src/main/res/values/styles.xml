@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyDialogStyle" parent="android:Theme.Material.Light.Dialog.NoActionBar">
+        <item name="android:colorBackground">@color/popupBackgrounColor</item>
+    </style>
+
 </resources>
