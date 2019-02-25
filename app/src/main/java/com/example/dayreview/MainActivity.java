@@ -15,12 +15,15 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     WebView webView;
 
     private Dialog      m_Dialog                = null;
+    private long        backKeyPressedTime      = 0;
+    private Toast       m_Toast;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -119,10 +122,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(webView.canGoBack())
+        if(webView.canGoBack()) {
             webView.goBack();
-        else
-            super.onBackPressed();
+        } else {
+            if (System.currentTimeMillis() > backKeyPressedTime + 2000) {
+                backKeyPressedTime = System.currentTimeMillis();
+                showGuide();
+                return;
+            }
 
+            if (System.currentTimeMillis() <= backKeyPressedTime + 2000) {
+                m_Toast.cancel();
+                super.onBackPressed();
+            }
+        }
     }
+
+
+    public void showGuide() {
+        m_Toast = Toast.makeText(this, "\'뒤로\'버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
+        m_Toast.show();
+    }
+
+
 }
