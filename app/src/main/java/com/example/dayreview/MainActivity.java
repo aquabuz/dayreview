@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.Window;
+import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private Dialog      m_Dialog                = null;
     private long        backKeyPressedTime      = 0;
     private Toast       m_Toast;
+    private AlertDialog.Builder m_AlertDialog   = null;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -42,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
         m_Dialog.requestWindowFeature (Window.FEATURE_NO_TITLE);
         m_Dialog.setContentView (R.layout.custom_dialog);
         m_Dialog.getWindow().setBackgroundDrawableResource (android.R.color.transparent);
+        m_Dialog.setCancelable(false);
+        m_Dialog.show();
 
         webView = (WebView)findViewById(R.id.dayreivew);
 
@@ -64,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     private class WebViewChromeClientClass extends WebChromeClient {
         @Override
         public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
@@ -72,22 +75,57 @@ public class MainActivity extends AppCompatActivity {
 
             final JsResult finalRes = result;
 
-            AlertDialog.Builder alert = new AlertDialog.Builder(view.getContext(), R.style.MyDialogStyle);
-
-
-            alert.setMessage(message);
-            alert.setPositiveButton(android.R.string.ok,
+            m_AlertDialog = new AlertDialog.Builder(view.getContext(), R.style.MyDialogStyle);
+            m_AlertDialog.setMessage(message + "                    ");
+            m_AlertDialog.setPositiveButton(android.R.string.ok,
                             new AlertDialog.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     finalRes.confirm();
                                 }
                             });
-            alert.setCancelable(false);
-            alert.create();
-            alert.show();
+            m_AlertDialog.create();
+            m_AlertDialog.setCancelable(false);
+            m_AlertDialog.show();
+            return true;
+        }
+
+
+        @Override
+        public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+            Log.e("debug", "onShowFileChooser");
+            return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+        }
+
+        @Override
+        public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
+            Log.e("debug", "onJsConfirm");
+            m_AlertDialog = new AlertDialog.Builder(view.getContext(), R.style.MyDialogStyle);
+            m_AlertDialog.setMessage(message + "                    ");
+            m_AlertDialog.setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    result.confirm();
+                                }
+                            });
+            m_AlertDialog.setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    result.cancel();
+                                }
+                            });
+            m_AlertDialog.create();
+            m_AlertDialog.setCancelable(false);
+            m_AlertDialog.show();
 
             return true;
+        }
+
+        @Override
+        public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+            Log.e("debug", "onJsPrompt");
+            return super.onJsPrompt(view, url, message, defaultValue, result);
         }
     }
 
@@ -106,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             final Uri uri = request.getUrl();
             view.loadUrl(uri.toString());
-            Log.e("debug","shouldOverrideUrlLoading");
+            Log.e("debug","shouldOverrideUrlLoading=" + uri.toString());
             return true;
         }
 
@@ -143,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            Log.e("debug","onReceivedError");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -151,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                             m_Dialog.setCancelable(true);
                             m_Dialog.dismiss();
                         }
-                    } catch (Throwable e) {}
+                    } catch (Throwable e) {Log.e("debug","onReceivedError::Throwable");}
                 }
             });
             super.onReceivedError(view, request, error);
@@ -166,7 +205,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             if (System.currentTimeMillis() > backKeyPressedTime + 2000) {
                 backKeyPressedTime = System.currentTimeMillis();
-                showGuide();
+                m_Toast = Toast.makeText(this, "\'뒤로\'버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
+                m_Toast.show();
                 return;
             }
 
@@ -176,25 +216,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-    public void showGuide() {
-        m_Toast = Toast.makeText(this, "\'뒤로\'버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
-        m_Toast.show();
-    }
-
-    private void showHtml() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Log.e("debug","evaluateJavascript");
-            webView.evaluateJavascript("(function() { return ('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>'); })();",
-                    new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String html) {
-                            Log.e("debug","html=" + html );
-                        }
-                    });
-        }
-    }
-
 
 }
