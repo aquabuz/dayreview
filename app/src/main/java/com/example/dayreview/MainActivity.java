@@ -51,9 +51,9 @@ public class MainActivity extends AppCompatActivity {
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setAppCacheEnabled(false);
-
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setDomStorageEnabled(true);
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         webView.setWebViewClient(new WebViewClientClass());
         webView.setWebChromeClient(new WebViewChromeClientClass());
@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-            Log.e("debug","onReceivedError");
+            Log.e("debug","onReceivedError::error=" + error);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
